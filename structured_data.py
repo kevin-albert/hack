@@ -10,7 +10,7 @@ from lxml import etree
 STOP = '[STOP]'
 PAD = '[PAD]'
 
-def load(dir='./TNG_DATA', seq_length=40):
+def load_data(dir='./TNG_DATA', seq_length=40):
   """
   when choosing seq_length, keep in mind the distribution of sequence sizes in 
   the raw data:
@@ -39,8 +39,8 @@ def load(dir='./TNG_DATA', seq_length=40):
   domain = [PAD,STOP]
   scenes = []
 
-  data_files = [f for f in listdir(dir) if re.match(r'[0-9]+.htm', f)]
-  # data_files = ['101.htm']
+  # data_files = [f for f in listdir(dir) if re.match(r'[0-9]+.htm', f)]
+  data_files = ['101.htm']
   print('Parsing {} HTML files'.format(len(data_files)))
   for data_file in data_files:
     html = etree.parse(open(join(dir, data_file)), etree.HTMLParser())
@@ -94,6 +94,7 @@ class TNGData:
       person_enc = util.binary_search(people, line[0])
       words_enc = [ words_map[word] for word in line[1] ]
       self.lines.append((person_enc, words_enc))
+
     print('Done encoding')
 
   def get_seq_length(self):
@@ -101,7 +102,7 @@ class TNGData:
 
 
   def get_num_words(self):
-    return len(self.domain)
+    return len(self.words)
 
 
   def get_num_people(self):
@@ -156,6 +157,11 @@ class TNGData:
 
   def decode_word(self, word):
     return self.words[np.argmax(word)]
+
+
+  def decode_sequence(self, sequence):
+    result = [self.decode_word(word) for word in sequence]
+    return list(filter(lambda word: word != PAD, result))
 
 
   def decode_person(self, person):
