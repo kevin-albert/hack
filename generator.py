@@ -12,11 +12,11 @@ data = load_star_trek_data()
 
 n_input = data.domain()
 n_output = data.domain()
-n_steps = 20
+n_steps = 10
 batch_size = 50
 n_hidden = 200
-learning_rate = 0.01
-training_iters = 1000000
+learning_rate = 0.00001
+epochs = 100
 
 print('Initializing Tensorflow')
 
@@ -69,7 +69,7 @@ with tf.Session() as session:
   session.run(tf.global_variables_initializer())
   batch = 1
 
-  for batch_x, batch_y in data.batch_iterate(10, batch_size, n_steps):
+  for batch_x, batch_y in data.batch_iterate(epochs, batch_size, n_steps):
     feed = {x: batch_x, Y_: batch_y}
     session.run(optimizer, feed_dict=feed)
 
@@ -92,3 +92,5 @@ with tf.Session() as session:
   print(result)
 
 print('Done')
+
+

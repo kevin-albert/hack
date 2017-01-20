@@ -105,13 +105,13 @@ class StarTrekData:
 
 class BatchIterator:
 
-  def __init__(self, data, n_loops, batch_size, seq_length, shuffled):
+  def __init__(self, data, epochs, batch_size, seq_length, shuffled):
     self.data = data
     self.shuffled = shuffled
-    self.n_loops = n_loops
+    self.epochs = epochs
     self.batch_size = batch_size
     self.seq_length = seq_length
-    self.loop = 0
+    self.epoch = 0
     self.title = 0
     self.seq = 0
     self.order = [i for i in range(len(data.titles))]
@@ -121,7 +121,7 @@ class BatchIterator:
 
 
   def __iter__(self):
-    self.loop = 0
+    self.epoch = 0
     self.title = 0
     self.seq = 0
     return self 
@@ -131,7 +131,6 @@ class BatchIterator:
 
     if self.done:
       raise StopIteration
-
 
     """
     returns batch_x, batch_y such that:
@@ -145,25 +144,27 @@ class BatchIterator:
     batch_y = []
 
     for _ in range(self.batch_size):
+      index = self.order[self.title]
       title = self.data.titles[self.order[self.title]]
       sequence = title[self.seq:self.seq + self.seq_length + 1]
       if len(sequence) <= self.seq_length:
         # This means we've reached the end of a title
         # pad the current sequence (it should already have a <STOP>) and then 
         # move on to the next title
-        sequence += [self.data.encode(STOP)] * (self.seq_length + 1 - len(sequence))
+        sequence += [self.data.encoder[STOP]] * (self.seq_length + 1 - len(sequence))
         self.title += 1
         self.seq = 0
         if self.title >= len(self.order):
-          self.loop += 1
-          if self.loop >= self.n_loop:
-            # We've gone through all batch
+          self.epoch += 1
+          if self.epoch >= self.epochs:
+            # We've gone through all 
             self.done = True
+            break
           else:
             # This means we've gone through all titles. Loop back to the first 
             # title and shuffle if necessary
             self.title = 0
-            self.loop += 1
+            self.epoch += 1
             if self.shuffled:
               np.random.shuffle(self.order)
       else:
@@ -174,3 +175,5 @@ class BatchIterator:
       batch_y += [one_hot_array(self.data.domain(), sequence[1:])]
       
     return batch_x, batch_y
+
+
