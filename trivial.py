@@ -10,10 +10,10 @@ tng_data = load_data()
 n_input = tng_data.get_num_words()
 n_output = tng_data.get_num_people()
 n_steps = tng_data.get_seq_length()
-batch_size = 80
-n_hidden = 1000
-learning_rate = 0.0001
-training_iters = 100000
+batch_size = 50
+n_hidden = 100
+learning_rate = 0.1
+training_iters = 1000000
 
 print('Initializing Tensorflow')
 
@@ -66,7 +66,7 @@ with tf.Session() as session:
       # get batch cost
       loss = session.run(cost, feed_dict=feed)
       print('Step: {:10}, Loss: {:0.8f}, Accuracy: {:0.8f}'\
-            .format(step, loss, 0))
+            .format(step * batch_size, loss, 0))
     step += 1
 
 print('Done')
