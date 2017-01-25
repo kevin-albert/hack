@@ -52,6 +52,9 @@ def load_star_trek_data(dir='./_DATA'):
         #   words += [SCENE]
         words += re.findall(r'([a-zA-Z0-9\']+|[\.\?!,\(\):])', text)
         words += [EOL]
+        if len(words) >= 50:
+          break
+
     words += [STOP]
     domain.update(words)
     data += [words]
@@ -169,11 +172,15 @@ class BatchIterator:
               np.random.shuffle(self.order)
       else:
         self.seq += 1
-      
+
       # add the sequence to the batch, with y starting one token after x
       batch_x += [one_hot_array(self.data.domain(), sequence[:-1])]
       batch_y += [one_hot_array(self.data.domain(), sequence[1:])]
-      
+    
+    if self.done and len(batch_x) == 0:
+      # we ran out of data
+      raise StopIteration
+
     return batch_x, batch_y
 
 

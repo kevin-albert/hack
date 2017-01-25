@@ -2,21 +2,20 @@
 import tensorflow as tf
 import numpy as np 
 from tensorflow.python.ops import rnn, rnn_cell
-from st_data import load_star_trek_data
+import char_data as data
 
 
 ################################################################################
 # load the data                                                                #
 ################################################################################
-data = load_star_trek_data()
 
-n_input = data.domain()
-n_output = data.domain()
-n_steps = 10
-batch_size = 50
+n_input = data.domain
+n_output = data.domain
+n_steps = 60
+batch_size = 1
 n_hidden = 200
-learning_rate = 0.00001
-epochs = 100
+learning_rate = 0.0001
+epochs = 500
 
 print('Initializing Tensorflow')
 
@@ -68,26 +67,28 @@ print('Training')
 with tf.Session() as session:
   session.run(tf.global_variables_initializer())
   batch = 1
+  for epoch in range(epochs):
+    for batch_x, batch_y in data.iterate(batch_size, n_steps):
+      feed = {x: batch_x, Y_: batch_y}
+      session.run(optimizer, feed_dict=feed)
 
-  for batch_x, batch_y in data.batch_iterate(epochs, batch_size, n_steps):
-    feed = {x: batch_x, Y_: batch_y}
-    session.run(optimizer, feed_dict=feed)
+      # print stats along the way
+      if batch % 100 == 0:
+        # get batch cost
+        loss = session.run(cost, feed_dict=feed)
+        print('Epoch: {:5}, Batch: {:8}, Step: {:11}, Loss: {:0.5f}'
+          .format(epoch, batch, batch * batch_size, loss))
 
-    # print stats along the way
-    if batch % 100 == 0:
-      # get batch cost
-      loss = session.run(cost, feed_dict=feed)
-      print('Step: {:10}, Loss: {:0.5f}'.format(batch * batch_size, loss))
-    batch += 1
+      batch += 1
 
   # Test it out!
   print('Testing')
   seq = [data.start_token()] + [np.zeros(n_input)] * (n_steps-1)
-  result = []
+  result = ''
   for _ in range(50):
-    token = session.run(out, feed_dict={x: [seq]})
-    result += [data.decode(token)]
-    seq[0] = token
+    char = session.run(out, feed_dict={x: [seq]})
+    result += data.decode(char)
+    seq[0] = char
 
   print(result)
 
