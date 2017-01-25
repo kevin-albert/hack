@@ -96,7 +96,7 @@ def iterate(batch_size, seq_length, shuffled=False):
     title = data[title_idx]
     seq_start = 0
     while seq_start < len(title):
-      sequence = title[seq_start:seq_length+1]
+      sequence = title[seq_start:seq_start+seq_length+1]
       sequence += PAD * (seq_length + 1 - len(sequence))
       seq_start += seq_length
       batch_x += [encode_string(sequence[:-1])]

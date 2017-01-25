@@ -11,11 +11,11 @@ import char_data as data
 
 n_input = data.domain
 n_output = data.domain
-n_steps = 60
-batch_size = 1
+n_steps = 50
+batch_size = 10
 n_hidden = 200
-learning_rate = 0.0001
-epochs = 500
+learning_rate = 0.002
+epochs = 1000
 
 print('Initializing Tensorflow')
 
@@ -32,7 +32,7 @@ lstm_cell = rnn_cell.BasicLSTMCell(n_hidden, forget_bias=1.0)
 outputs, states = rnn.rnn(lstm_cell, xS, dtype=tf.float32)
 
 # weights, biases
-W = tf.Variable(tf.random_normal([n_hidden, n_output]))
+W = tf.Variable(tf.random_normal([n_hidden, n_output], stddev=1.0/np.sqrt(n_hidden)))
 b = tf.Variable(tf.random_normal([n_output]))
 
 # ok, here we get an array of length n_steps with tensors of shape 
@@ -73,11 +73,18 @@ with tf.Session() as session:
       session.run(optimizer, feed_dict=feed)
 
       # print stats along the way
-      if batch % 100 == 0:
+      if batch % 50 == 0:
         # get batch cost
         loss = session.run(cost, feed_dict=feed)
         print('Epoch: {:5}, Batch: {:8}, Step: {:11}, Loss: {:0.5f}'
           .format(epoch, batch, batch * batch_size, loss))
+
+        line = ''
+        for output in Y:
+          char = session.run(output, feed_dict=feed)
+          line += data.decode(char)
+        print('sample: {}'.format(line))
+        print('')
 
       batch += 1
 
