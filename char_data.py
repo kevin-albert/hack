@@ -20,7 +20,7 @@ decoding_array = ['?' for _ in range(255)]
 
 for o in range(255):
   c = chr(o)
-  if c in 'a-zA-Z0-9 \n[]().,?!é\^:*_-':
+  if re.match(r'[a-zA-Z0-9 \n\[\]\(\)\.,\?!é\^:\*_-]', c):
     encoding_array[o] = domain
     decoding_array[domain] = c
     domain += 1
@@ -47,11 +47,12 @@ def _load(dir='./_DATA'):
       text = text.strip()
       if text:
         words += _parse_line(text)
-        if len(words) >= 1500:
+        if len(words) >= 200:
           break
 
     words += STOP
     data.append(words)
+  print('Text length: {}'.format(len(words)))
 
 def start_token():
   return encode(GO)
@@ -79,7 +80,6 @@ def encode_string(str):
 def decode_string(arrays):
   return ''.join(map(decode, arrays))
 
-
 def iterate(batch_size, seq_length, shuffled=False):
 
   if len(data) == 0:
@@ -103,5 +103,7 @@ def iterate(batch_size, seq_length, shuffled=False):
       batch_y += [encode_string(sequence[1:])]
       if len(batch_x) >= batch_size:
         yield batch_x, batch_y
+        return
         batch_x = []
         batch_y = []
+

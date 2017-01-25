@@ -12,10 +12,11 @@ import char_data as data
 n_input = data.domain
 n_output = data.domain
 n_steps = 50
-batch_size = 10
-n_hidden = 200
-learning_rate = 0.002
-epochs = 1000
+batch_size = 1
+n_hidden = 100
+n_layers = 2
+learning_rate = 0.005
+epochs = 200
 
 print('Initializing Tensorflow')
 
@@ -29,7 +30,8 @@ xR = tf.reshape(x, [-1, n_input])
 xS = tf.split(0, n_steps, xR)
 
 lstm_cell = rnn_cell.BasicLSTMCell(n_hidden, forget_bias=1.0)
-outputs, states = rnn.rnn(lstm_cell, xS, dtype=tf.float32)
+lstm_stack = rnn_cell.MultiRNNCell([lstm_cell] * n_layers)
+outputs, states = rnn.rnn(lstm_stack, xS, dtype=tf.float32)
 
 # weights, biases
 W = tf.Variable(tf.random_normal([n_hidden, n_output], stddev=1.0/np.sqrt(n_hidden)))
@@ -69,11 +71,10 @@ with tf.Session() as session:
   batch = 1
   for epoch in range(epochs):
     for batch_x, batch_y in data.iterate(batch_size, n_steps):
-      feed = {x: batch_x, Y_: batch_y}
-      session.run(optimizer, feed_dict=feed)
 
+      feed = {x: batch_x, Y_: batch_y}
       # print stats along the way
-      if batch % 50 == 0:
+      if batch % 100 == 0:
         # get batch cost
         loss = session.run(cost, feed_dict=feed)
         print('Epoch: {:5}, Batch: {:8}, Step: {:11}, Loss: {:0.5f}'
@@ -82,22 +83,30 @@ with tf.Session() as session:
         line = ''
         for output in Y:
           char = session.run(output, feed_dict=feed)
-          line += data.decode(char)
-        print('sample: {}'.format(line))
-        print('')
+          line += data.decode(char[0])
+        print('expected: {}'.format(data.decode_string(batch_y[0])))
+        print('actual:   {}'.format(line))
+        
+      session.run(optimizer, feed_dict=feed)
 
       batch += 1
 
   # Test it out!
   print('Testing')
+  print('*' * 80)
   seq = [data.start_token()] + [np.zeros(n_input)] * (n_steps-1)
-  result = ''
-  for _ in range(50):
-    char = session.run(out, feed_dict={x: [seq]})
-    result += data.decode(char)
-    seq[0] = char
+  limit = 100
+  while True:
+    result = session.run(Y[0], feed_dict={x: [seq]})
+    char = data.decode(result[0])
+    if char == data.STOP or limit == 0:
+      break
+    print(char, end='')
+    seq[0] = result[0]
+    limit -= 1
 
-  print(result)
+  print('*' * 80)
+  
 
 print('Done')
 
