@@ -5,18 +5,14 @@ from tensorflow.python.ops import rnn, rnn_cell
 import char_data as data
 
 
-################################################################################
-# load the data                                                                #
-################################################################################
-
 n_input = data.domain
 n_output = data.domain
-n_steps = 50
+n_steps = 20
 batch_size = 1
-n_hidden = 100
+n_hidden = 50
 n_layers = 2
-learning_rate = 0.005
-epochs = 200
+learning_rate = 0.01
+epochs = 500
 
 print('Initializing Tensorflow')
 
@@ -29,9 +25,9 @@ xT = tf.transpose(x, [1,0,2])
 xR = tf.reshape(x, [-1, n_input])
 xS = tf.split(0, n_steps, xR)
 
-lstm_cell = rnn_cell.BasicLSTMCell(n_hidden, forget_bias=1.0)
-lstm_stack = rnn_cell.MultiRNNCell([lstm_cell] * n_layers)
-outputs, states = rnn.rnn(lstm_stack, xS, dtype=tf.float32)
+lstm = rnn_cell.BasicLSTMCell(n_hidden, forget_bias=1.0)
+cell = rnn_cell.MultiRNNCell([lstm] * n_layers)
+outputs, states = rnn.rnn(cell, xS, dtype=tf.float32)
 
 # weights, biases
 W = tf.Variable(tf.random_normal([n_hidden, n_output], stddev=1.0/np.sqrt(n_hidden)))
@@ -63,7 +59,8 @@ for y, y_ in zip(Y, Y_U):
 # compute cost, optimize
 cost = tf.reduce_mean(tf.stack(ce,1))
 optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(cost)
-out = tf.reshape(tf.slice(Y[0],[0,0],[1,n_output]),[-1])
+
+
 
 print('Training')
 with tf.Session() as session:
@@ -92,19 +89,25 @@ with tf.Session() as session:
       batch += 1
 
   # Test it out!
-  print('Testing')
+  print('Sampling')
   print('*' * 80)
-  seq = [data.start_token()] + [np.zeros(n_input)] * (n_steps-1)
-  limit = 100
-  while True:
-    result = session.run(Y[0], feed_dict={x: [seq]})
-    char = data.decode(result[0])
-    if char == data.STOP or limit == 0:
-      break
-    print(char, end='')
-    seq[0] = result[0]
-    limit -= 1
+ 
 
+  limit = 100
+  seq = [data.start_token()] + [np.zeros(n_input)] * (n_steps-1)
+  sample_step = 0
+  while True:
+    t_now = sample_step % n_steps
+    t_next = (sample_step+1) % n_steps
+    result = session.run(Y[t_now], feed_dict={x: [seq]})
+    char = data.decode(result[0])
+    print(char, end='')
+    if char == data.STOP or sample_step >= limit:
+      break
+    seq[t_next] = result[0]
+    sample_step += 1
+
+  print('')
   print('*' * 80)
   
 

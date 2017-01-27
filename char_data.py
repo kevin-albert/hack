@@ -103,7 +103,6 @@ def iterate(batch_size, seq_length, shuffled=False):
       batch_y += [encode_string(sequence[1:])]
       if len(batch_x) >= batch_size:
         yield batch_x, batch_y
-        return
         batch_x = []
         batch_y = []
 
