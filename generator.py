@@ -7,12 +7,12 @@ import char_data as data
 
 n_input = data.domain
 n_output = data.domain
-n_steps = 20
+n_steps = 40
 batch_size = 1
-n_hidden = 50
-n_layers = 2
-learning_rate = 0.01
-epochs = 500
+n_hidden = 200
+n_layers = 3
+learning_rate = 0.001
+epochs = 5000
 
 print('Initializing Tensorflow')
 
@@ -71,7 +71,7 @@ with tf.Session() as session:
 
       feed = {x: batch_x, Y_: batch_y}
       # print stats along the way
-      if batch % 100 == 0:
+      if batch % 500 == 0:
         # get batch cost
         loss = session.run(cost, feed_dict=feed)
         print('Epoch: {:5}, Batch: {:8}, Step: {:11}, Loss: {:0.5f}'
@@ -94,18 +94,27 @@ with tf.Session() as session:
  
 
   limit = 100
-  seq = [data.start_token()] + [np.zeros(n_input)] * (n_steps-1)
+  seq = data.start_seq(n_steps)
+  Yp = tf.squeeze(tf.reshape(tf.pack(Y), [1, n_steps, n_output]), [0])
   sample_step = 0
+
   while True:
-    t_now = sample_step % n_steps
-    t_next = (sample_step+1) % n_steps
-    result = session.run(Y[t_now], feed_dict={x: [seq]})
-    char = data.decode(result[0])
-    print(char, end='')
-    if char == data.STOP or sample_step >= limit:
+    seq = session.run(Yp, feed_dict={x: [seq]})
+    print(data.decode_string(seq), end='')
+    if sample_step >= limit:
       break
-    seq[t_next] = result[0]
-    sample_step += 1
+    sample_step += n_steps
+
+  # while True:
+  #   t_now = sample_step % n_steps
+  #   t_next = (sample_step+1) % n_steps
+  #   result = session.run(Y[t_now], feed_dict={x: [seq]})
+  #   char = data.decode(result[0])
+  #   print(char, end='')
+  #   if char == data.STOP or sample_step >= limit:
+  #     break
+  #   seq[t_next] = result[0]
+  #   sample_step += 1
 
   print('')
   print('*' * 80)

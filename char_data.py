@@ -58,6 +58,10 @@ def start_token():
   return encode(GO)
 
 
+def start_seq(seq_length):
+  return encode_string(data[0][0:seq_length])
+
+
 def _parse_line(line):
   line = re.sub(r'\s+', ' ', line)
   return re.sub(r'[^a-zA-Z0-9 \n\[\]().,?!é\:-]', '', line) + EOL
