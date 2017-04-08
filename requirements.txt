@@ -1,4 +1,4 @@
-tensorflow  >= 0.12
+tensorflow  >= 1.0.0
 lxml        ~= 3.7
 numpy       ~= 1.12
 
